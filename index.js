@@ -17,7 +17,8 @@ app.use(
   cors({
     origin: [
       "https://healthmate-frontend-sepia.vercel.app",
-      "http://localhost:3000"
+      "http://localhost:3000",
+      "http://localhost:5173"
     ],
     credentials: true,
     allowedHeaders: ["Content-Type", "Authorization"],
