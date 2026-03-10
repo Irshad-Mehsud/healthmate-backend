@@ -15,7 +15,7 @@ app.use(Express.urlencoded({ extended: true }));
 
 app.use(
   cors({
-    origin: true, // allow all origins (change in production)
+    origin: "https://healthmate-frontend-sepia.vercel.app", // allow all origins (change in production)
     credentials: true,
     allowedHeaders: ["Content-Type", "Authorization"],
   })
