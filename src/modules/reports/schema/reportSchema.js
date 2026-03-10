@@ -47,6 +47,21 @@ const reportSchema = new mongoose.Schema(
       enum: ["pending", "completed", "failed"],
       default: "pending",
     },
+
+    status: {
+      type: String,
+      default: "Uploaded",
+    },
+
+    analysis: {
+      summaryEnglish: { type: String },
+      summaryRomanUrdu: { type: String },
+      abnormalValues: [{ type: String }],
+      dietSuggestions: [{ type: String }],
+      homeRemedies: [{ type: String }],
+      doctorAdvice: { type: String },
+      analyzedAt: { type: Date },
+    },
   },
   { timestamps: true }
 );

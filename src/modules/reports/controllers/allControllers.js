@@ -1,4 +1,4 @@
-import { uploadReportService, getUserReportsService, getSingleReportService, deleteReportService } from "../services/allServices.js";
+import { uploadReportService, getUserReportsService, getSingleReportService, deleteReportService, saveReportAnalysisService } from "../services/allServices.js";
 
 
 const uploadReportController =async(req,res)=>{
@@ -97,11 +97,88 @@ const deleteReportController = async (req,res)=>{
 }
 
 
+const saveReportAnalysisController = async (req, res) => {
+    try {
+        const { reportId } = req.params;
+        const {
+            summaryEnglish,
+            summaryRomanUrdu,
+            abnormalValues,
+            dietSuggestions,
+            homeRemedies,
+            doctorAdvice,
+            analyzedAt
+        } = req.body;
+
+        const updatedReport = await saveReportAnalysisService(reportId, {
+            summaryEnglish,
+            summaryRomanUrdu,
+            abnormalValues,
+            dietSuggestions,
+            homeRemedies,
+            doctorAdvice,
+            analyzedAt
+        });
+
+        if (!updatedReport) {
+            return res.status(404).json({
+                success: false,
+                message: 'Report not found'
+            });
+        }
+
+        res.status(200).json({
+            success: true,
+            message: 'Analysis saved successfully',
+            report: updatedReport
+        });
+
+    } catch (error) {
+        console.error('Save analysis error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to save analysis',
+            error: error.message
+        });
+    }
+}
+
+const getReportDetailsController = async (req, res) => {
+    try {
+        const { reportId } = req.params;
+
+        const report = await getSingleReportService(reportId);
+
+        if (!report) {
+            return res.status(404).json({
+                success: false,
+                message: 'Report not found'
+            });
+        }
+
+        res.status(200).json({
+            success: true,
+            message: 'Report fetched successfully',
+            report: report
+        });
+
+    } catch (error) {
+        console.error('Get report details error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to fetch report details',
+            error: error.message
+        });
+    }
+}
+
 export {
     uploadReportController,
     getUserReportsController,
     getSingleReportController,
-    deleteReportController  
+    deleteReportController,
+    saveReportAnalysisController,
+    getReportDetailsController
 }
 
 

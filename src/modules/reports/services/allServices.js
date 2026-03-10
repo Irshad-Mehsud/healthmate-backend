@@ -49,9 +49,45 @@ const deleteReportService = async (reportId)=>{
     }
 }
 
+const saveReportAnalysisService = async (reportId, analysisData) => {
+    try {
+        const {
+            summaryEnglish,
+            summaryRomanUrdu,
+            abnormalValues,
+            dietSuggestions,
+            homeRemedies,
+            doctorAdvice,
+            analyzedAt
+        } = analysisData;
+
+        const updatedReport = await Report.findByIdAndUpdate(
+            reportId,
+            {
+                analysis: {
+                    summaryEnglish,
+                    summaryRomanUrdu,
+                    abnormalValues,
+                    dietSuggestions,
+                    homeRemedies,
+                    doctorAdvice,
+                    analyzedAt
+                },
+                status: 'Analyzed'
+            },
+            { new: true }
+        );
+
+        return updatedReport;
+    } catch (error) {
+        throw new Error("Saving Report Analysis Failed: " + error.message);
+    }
+}
+
 export {
     uploadReportService,
     getUserReportsService,
     getSingleReportService,
-    deleteReportService
+    deleteReportService,
+    saveReportAnalysisService
 }
