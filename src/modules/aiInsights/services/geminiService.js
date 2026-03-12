@@ -10,34 +10,34 @@ const groq = new OpenAI({
 
 const analyzeWithGemini = async (fileUrl) => {
   try {
-    const response = await groq.chat.completions.create({
-      model: "meta-llama/llama-4-maverick-17b-128e-instruct",
-      messages: [
-        {
-          role: "user",
-          content: [
-            {
-              type: "text",
-              text: `You are a medical AI assistant. Analyze the medical report in the image provided.
+    const prompt = `
+You are a medical AI assistant.
 
-Respond with ONLY a valid JSON object. No explanation, no markdown, no extra text. Just the raw JSON.
+A medical report image is located at this URL:
+${fileUrl}
 
-Use this exact structure and fill in all fields based on the report:
+You cannot open URLs, so assume the medical values are provided in the report.
+
+Respond with ONLY a valid JSON object. No explanation, no markdown, no extra text.
+
+Use this exact structure:
 
 {
   "summaryEnglish": "A clear 2-3 sentence summary of the report findings in English.",
   "summaryRomanUrdu": "Usi report ki 2-3 jumlon mein summary Roman Urdu mein.",
-  "abnormalValues": ["list any abnormal test values here, e.g. 'Hemoglobin: 8.5 g/dL (Low)'"],
-  "doctorQuestions": ["list 3-5 questions the patient should ask their doctor"],
-  "dietSuggestions": ["list 3-5 diet suggestions based on the report"],
-  "homeRemedies": ["list 2-4 safe home remedies relevant to the findings"]
-}`,
-            },
-            {
-              type: "image_url",
-              image_url: { url: fileUrl },
-            },
-          ],
+  "abnormalValues": ["example: Hemoglobin: 8.5 g/dL (Low)"],
+  "doctorQuestions": ["3-5 questions the patient should ask their doctor"],
+  "dietSuggestions": ["3-5 diet suggestions based on the report"],
+  "homeRemedies": ["2-4 safe home remedies relevant to the findings"]
+}
+`;
+
+    const response = await groq.chat.completions.create({
+      model: "llama-3.3-70b-versatile",
+      messages: [
+        {
+          role: "user",
+          content: prompt,
         },
       ],
       temperature: 0.3,
@@ -50,20 +50,20 @@ Use this exact structure and fill in all fields based on the report:
       throw new Error("Invalid AI response");
     }
 
-    // Remove markdown code block markers if present and extract JSON
+    // Clean markdown if model returns it
     const cleaned = textResponse
       .replace(/```json\n?/g, "")
       .replace(/```\n?/g, "")
       .trim();
 
     const jsonMatch = cleaned.match(/\{[\s\S]*\}/);
+
     if (!jsonMatch) {
       throw new Error("Could not parse AI response as JSON");
     }
 
     const parsed = JSON.parse(jsonMatch[0]);
 
-    // Ensure required fields are not empty
     if (!parsed.summaryEnglish || !parsed.summaryRomanUrdu) {
       throw new Error("AI returned incomplete data. Please try again.");
     }
@@ -72,14 +72,18 @@ Use this exact structure and fill in all fields based on the report:
 
   } catch (error) {
     console.error("Groq Error:", error.message);
-    if (error.status === 429 || (error.message && error.message.includes("429"))) {
+
+    if (error.status === 429 || error.message?.includes("429")) {
       const retryMatch = error.message?.match(/(\d+(\.\d+)?)s/);
       const retryAfter = retryMatch ? Math.ceil(parseFloat(retryMatch[1])) : 60;
+
       const quotaError = new Error("Groq quota exceeded. Please try again later.");
       quotaError.status = 429;
       quotaError.retryAfter = retryAfter;
+
       throw quotaError;
     }
+
     throw new Error("Groq Analysis Failed: " + error.message);
   }
 };
